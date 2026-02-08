@@ -31,8 +31,10 @@ export default function BrokerPaymantPage() {
   const [payAmount, setPayAmount] = useState("");
   const [note, setNote] = useState("");
 
-  const [loadSummary, { data: summaryRes, isFetching: fetchingSummary, error: summaryErr }] =
-    useLazyGetBrokerSummaryByNicQuery();
+  const [
+    loadSummary,
+    { data: summaryRes, isFetching: fetchingSummary, error: summaryErr },
+  ] = useLazyGetBrokerSummaryByNicQuery();
 
   const [createPay, { isLoading: paying }] = useCreateBrokerPaymentMutation();
 
@@ -57,8 +59,10 @@ export default function BrokerPaymantPage() {
     loadSummary(selectedBrokerNic);
   }, [selectedBrokerNic, loadSummary]);
 
+  // ✅ FIX: backend returns { totals: { totalCommission, pending } }
   const brokerObj = summaryRes?.broker || null;
-  const pending = Number(summaryRes?.totalPendingCommission || 0);
+  const totalCommission = Number(summaryRes?.totals?.totalCommission || 0);
+  const pending = Number(summaryRes?.totals?.pending || 0);
 
   const handleBrokerChange = (brokerNic) => {
     const b = brokers.find(
@@ -91,6 +95,8 @@ export default function BrokerPaymantPage() {
         alert("Broker payment recorded");
         setPayAmount("");
         setNote("");
+
+        // ✅ refresh summary immediately
         await loadSummary(selectedBrokerNic).unwrap();
       } else {
         alert(res?.message || "Payment failed");
@@ -180,7 +186,11 @@ export default function BrokerPaymantPage() {
             <div className="text-2xl font-extrabold text-blue-700">
               {fetchingSummary ? "Loading..." : money(pending)}
             </div>
+
+            {/* optional extra line (doesn't change layout much) */}
             <div className="text-[11px] text-gray-500">
+              Total Unlocked Commission: {fetchingSummary ? "..." : money(totalCommission)}
+              <br />
               Rule: unlocked = (interestPaid × commission%) ; pending = unlocked − brokerPaid
             </div>
           </div>
