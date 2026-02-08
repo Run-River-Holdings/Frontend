@@ -27,7 +27,8 @@ import CustomerPage from "./pages/Cutomer.page.jsx";
 import ViewCustomerPage from "./pages/view.customer.page.jsx";
 
 import CustomerPaymantPage from "./pages/CustomerPayment.page.jsx";
-import CustomerPaymantHistory from "./pages/customerPaymentHistory.jsx";
+import CustomerPaymantHistory from "./pages/CustomerPaymentHistory.jsx";
+
 import BrokerPaymantPage from "./pages/BrokerPayment.page.jsx";
 import BrokerPaymantHistory from "./pages/BrokerpaymentHistory.jsx";
 

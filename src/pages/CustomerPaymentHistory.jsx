@@ -94,20 +94,22 @@ export default function CustomerPaymantHistory() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3 text-sm">
                     <div>
                       <div className="text-gray-500 text-xs">Investment</div>
-                      <div className="font-semibold">{safe(r.investment?.investmentName)}</div>
+                      <div className="font-semibold">
+                        {safe(r.investment?.investmentName)}
+                      </div>
                     </div>
 
                     <div>
                       <div className="text-gray-500 text-xs">Payment Method</div>
-                      <div className="font-semibold uppercase">{safe(r.paymentMethod)}</div>
+                      <div className="font-semibold uppercase">
+                        {safe(r.paymentMethod)}
+                      </div>
                     </div>
 
                     <div>
                       <div className="text-gray-500 text-xs">Payment Type</div>
                       <div className="font-semibold">{payForLabel(r.payFor)}</div>
                     </div>
-
-                    {/* ✅ REMOVED: Total Interest Paid card */}
 
                     <div>
                       <div className="text-gray-500 text-xs">Investment Paid?</div>
