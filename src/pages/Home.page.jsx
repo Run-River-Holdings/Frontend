@@ -1,3 +1,4 @@
+// src/pages/HomePage.jsx
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { AiOutlineBell } from "react-icons/ai";
@@ -16,6 +17,7 @@ import {
 } from "recharts";
 
 import { useGetDashboardSummaryQuery } from "../api/dashboardApi";
+import { useGetTodayNotificationCountQuery } from "../api/notificationApi";
 
 const formatLKR = (n) =>
   `Rs. ${Number(n || 0).toLocaleString("en-LK", {
@@ -24,8 +26,18 @@ const formatLKR = (n) =>
   })}`;
 
 const monthNames = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const Button = ({ active, children, ...props }) => (
@@ -33,7 +45,9 @@ const Button = ({ active, children, ...props }) => (
     {...props}
     className={[
       "px-3 py-2 rounded-xl text-sm font-semibold transition",
-      active ? "bg-blue-700 text-white" : "bg-white/70 hover:bg-white text-blue-800",
+      active
+        ? "bg-blue-700 text-white"
+        : "bg-white/70 hover:bg-white text-blue-800",
     ].join(" ")}
   >
     {children}
@@ -42,10 +56,14 @@ const Button = ({ active, children, ...props }) => (
 
 const Card = ({ title, value, label, children }) => (
   <div className="bg-gray-200 rounded-2xl shadow-md w-full p-4 sm:p-6">
-    <h1 className="text-blue-800 font-extrabold text-lg sm:text-xl md:text-2xl">{title}</h1>
+    <h1 className="text-blue-800 font-extrabold text-lg sm:text-xl md:text-2xl">
+      {title}
+    </h1>
 
     <div className="mt-1 flex flex-wrap items-baseline gap-2">
-      <h2 className="text-blue-700 font-semibold text-sm sm:text-base md:text-lg">{value}</h2>
+      <h2 className="text-blue-700 font-semibold text-sm sm:text-base md:text-lg">
+        {value}
+      </h2>
       {label ? (
         <span className="text-xs sm:text-sm font-semibold text-blue-800/80 bg-white/60 px-2 py-0.5 rounded-full">
           {label}
@@ -53,7 +71,9 @@ const Card = ({ title, value, label, children }) => (
       ) : null}
     </div>
 
-    <div className="mt-4 w-full h-[220px] sm:h-[240px] md:h-[260px]">{children}</div>
+    <div className="mt-4 w-full h-[220px] sm:h-[240px] md:h-[260px]">
+      {children}
+    </div>
   </div>
 );
 
@@ -78,11 +98,16 @@ export default function HomePage() {
   const [year, setYear] = useState(defaultYear);
   const [month, setMonth] = useState(defaultMonth);
 
+  // ✅ dashboard summary
   const { data, isLoading, isFetching, isError } = useGetDashboardSummaryQuery({
     granularity,
     year,
     month,
   });
+
+  // ✅ notification red-dot count
+  const { data: nCountData } = useGetTodayNotificationCountQuery();
+  const todayCount = Number(nCountData?.count || 0);
 
   const labels = data?.labels || [];
   const series = data?.series || {};
@@ -90,40 +115,62 @@ export default function HomePage() {
 
   const review = data?.monthlyReview || {
     monthLabel: monthNames[month - 1],
-    customerPayThisMonth: 0,         // full paid
-    brokerPayThisMonth: 0,           // broker paid
-    realProfitThisMonth: 0,          // interest - broker paid
-    customerInterestThisMonth: 0,    // interest only
+    customerPayThisMonth: 0, // full paid
+    brokerPayThisMonth: 0, // broker paid
+    realProfitThisMonth: 0, // interest - broker paid
+    customerInterestThisMonth: 0, // interest only
     investmentThisMonth: 0,
   };
 
   const topLabel = useMemo(() => {
-    if (granularity === "day") return `${monthNames[month - 1]} ${year} (Day Wise)`;
+    if (granularity === "day")
+      return `${monthNames[month - 1]} ${year} (Day Wise)`;
     if (granularity === "month") return `Year ${year} (Month Wise)`;
     return `Last 5 Years (Year Wise)`;
   }, [granularity, year, month]);
 
   const chartInvestment = useMemo(
-    () => labels.map((label, i) => ({ label, value: Number(series?.investment?.[i] || 0) })),
+    () =>
+      labels.map((label, i) => ({
+        label,
+        value: Number(series?.investment?.[i] || 0),
+      })),
     [labels, series]
   );
 
   const chartBrokerPay = useMemo(
-    () => labels.map((label, i) => ({ label, value: Number(series?.brokerPay?.[i] || 0) })),
+    () =>
+      labels.map((label, i) => ({
+        label,
+        value: Number(series?.brokerPay?.[i] || 0),
+      })),
     [labels, series]
   );
 
   // ✅ real profit = customer interest received - broker commission paid
   const chartRealProfit = useMemo(
-    () => labels.map((label, i) => ({ label, value: Number(series?.realProfit?.[i] || 0) })),
+    () =>
+      labels.map((label, i) => ({
+        label,
+        value: Number(series?.realProfit?.[i] || 0),
+      })),
     [labels, series]
   );
 
   const monthlyReviewData = useMemo(() => {
     return [
-      { name: "Customer Pay (Full)", value: Number(review?.customerPayThisMonth || 0) },
-      { name: "Broker Pay (Commission Paid)", value: Number(review?.brokerPayThisMonth || 0) },
-      { name: "Real Profit (Interest - Broker)", value: Number(review?.realProfitThisMonth || 0) },
+      {
+        name: "Customer Pay (Full)",
+        value: Number(review?.customerPayThisMonth || 0),
+      },
+      {
+        name: "Broker Pay (Commission Paid)",
+        value: Number(review?.brokerPayThisMonth || 0),
+      },
+      {
+        name: "Real Profit (Interest - Broker)",
+        value: Number(review?.realProfitThisMonth || 0),
+      },
     ];
   }, [review]);
 
@@ -137,24 +184,39 @@ export default function HomePage() {
           RunRiver Holding (pvt).Ltd
         </h1>
 
+        {/* ✅ Bell with red dot */}
         <Link
           to="/notification"
           className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-gray-100 transition"
           aria-label="Notifications"
         >
-          <AiOutlineBell className="text-2xl sm:text-3xl text-gray-700" />
+          <div className="relative">
+            <AiOutlineBell className="text-2xl sm:text-3xl text-gray-700" />
+            {todayCount > 0 ? (
+              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-red-600 border-2 border-white" />
+            ) : null}
+          </div>
         </Link>
 
         {/* FILTER BAR */}
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <div className="flex gap-2 bg-white/50 p-2 rounded-2xl">
-            <Button active={granularity === "day"} onClick={() => setGranularity("day")}>
+            <Button
+              active={granularity === "day"}
+              onClick={() => setGranularity("day")}
+            >
               Day Wise
             </Button>
-            <Button active={granularity === "month"} onClick={() => setGranularity("month")}>
+            <Button
+              active={granularity === "month"}
+              onClick={() => setGranularity("month")}
+            >
               Month Wise
             </Button>
-            <Button active={granularity === "year"} onClick={() => setGranularity("year")}>
+            <Button
+              active={granularity === "year"}
+              onClick={() => setGranularity("year")}
+            >
               Year Wise
             </Button>
           </div>
@@ -166,9 +228,13 @@ export default function HomePage() {
               onChange={(e) => setYear(Number(e.target.value))}
               className="rounded-xl px-3 py-2 text-sm bg-white"
             >
-              {Array.from({ length: 7 }, (_, i) => defaultYear - 5 + i).map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
+              {Array.from({ length: 7 }, (_, i) => defaultYear - 5 + i).map(
+                (y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                )
+              )}
             </select>
 
             <span className="text-blue-800 font-semibold text-sm">Month</span>
@@ -177,10 +243,16 @@ export default function HomePage() {
               onChange={(e) => setMonth(Number(e.target.value))}
               className="rounded-xl px-3 py-2 text-sm bg-white"
               disabled={granularity === "year"}
-              title={granularity === "year" ? "Month is not needed for Year Wise view" : ""}
+              title={
+                granularity === "year"
+                  ? "Month is not needed for Year Wise view"
+                  : ""
+              }
             >
               {monthNames.map((m, idx) => (
-                <option key={m} value={idx + 1}>{m}</option>
+                <option key={m} value={idx + 1}>
+                  {m}
+                </option>
               ))}
             </select>
 
@@ -195,12 +267,20 @@ export default function HomePage() {
       {/* GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Total Investment */}
-        <Card title="Total Investment" value={formatLKR(totals?.totalInvestment)} label={topLabel}>
+        <Card
+          title="Total Investment"
+          value={formatLKR(totals?.totalInvestment)}
+          label={topLabel}
+        >
           <SimpleBarChart data={chartInvestment} />
         </Card>
 
         {/* Broker Pay */}
-        <Card title="Broker Pay (Commission We Paid)" value={formatLKR(totals?.totalBrokerPay)} label={topLabel}>
+        <Card
+          title="Broker Pay (Commission We Paid)"
+          value={formatLKR(totals?.totalBrokerPay)}
+          label={topLabel}
+        >
           <SimpleBarChart data={chartBrokerPay} />
         </Card>
 
@@ -242,7 +322,10 @@ export default function HomePage() {
                   label
                 >
                   {monthlyReviewData.map((_, idx) => (
-                    <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                    <Cell
+                      key={idx}
+                      fill={PIE_COLORS[idx % PIE_COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip formatter={(v) => formatLKR(v)} />
@@ -253,24 +336,29 @@ export default function HomePage() {
 
           <div className="mt-3 space-y-1">
             <h2 className="text-blue-700 text-sm sm:text-base font-semibold">
-              Customer Pay (Full: Principal + Interest): {formatLKR(review?.customerPayThisMonth)}
+              Customer Pay (Full: Principal + Interest):{" "}
+              {formatLKR(review?.customerPayThisMonth)}
             </h2>
 
             <h2 className="text-blue-700 text-sm sm:text-base font-semibold">
-              Customer Interest (Only): {formatLKR(review?.customerInterestThisMonth)}
+              Customer Interest (Only):{" "}
+              {formatLKR(review?.customerInterestThisMonth)}
             </h2>
 
             <h2 className="text-blue-700 text-sm sm:text-base font-semibold">
-              Broker Pay (Commission Paid): {formatLKR(review?.brokerPayThisMonth)}
+              Broker Pay (Commission Paid):{" "}
+              {formatLKR(review?.brokerPayThisMonth)}
             </h2>
 
             <h2 className="text-blue-700 text-sm sm:text-base font-semibold">
-              Real Profit (Interest - Broker Commission): {formatLKR(review?.realProfitThisMonth)}
+              Real Profit (Interest - Broker Commission):{" "}
+              {formatLKR(review?.realProfitThisMonth)}
             </h2>
           </div>
 
           <div className="mt-3 text-xs text-blue-800/70 font-semibold">
-            Meaning: Real Profit = Customer Interest received − Broker commission paid.
+            Meaning: Real Profit = Customer Interest received − Broker commission
+            paid.
           </div>
         </div>
       </div>

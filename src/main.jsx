@@ -51,9 +51,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Routes>
           <Route element={<RootLayout />}>
             {/* PUBLIC ROUTES */}
-            <Route path="/" element={<SignUpPage />} />
-            <Route path="/signin" element={<SignInPage />} />
-            <Route path="/signup" element={<SignUpPage />} />
+            {/* <Route path="/" element={<SignUpPage />} /> */}
+            <Route path="/" element={<SignInPage />} />
+            {/* <Route path="/signup" element={<SignUpPage />} /> */}
             <Route path="/vertify" element={<EmailVerificationPage />} />
 
             {/* Notification (protect if you want) */}

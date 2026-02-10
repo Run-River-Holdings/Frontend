@@ -113,7 +113,7 @@ const SignInPage = () => {
           </button>
 
           {/* optional link */}
-          <p className="text-sm text-gray-600 mt-4 text-center">
+          {/* <p className="text-sm text-gray-600 mt-4 text-center">
             Don&apos;t have an account?{" "}
             <span
               className="text-blue-700 font-semibold cursor-pointer hover:underline"
@@ -121,7 +121,7 @@ const SignInPage = () => {
             >
               Sign Up
             </span>
-          </p>
+          </p>  */}
         </form>
       </div>
     </div>

@@ -23,6 +23,9 @@ import { customerPayApi } from "../api/customerpayApi";
 import { brokerPayApi } from "../api/brokerpayApi";
 import { dashboardApi } from "../api/dashboardApi";
 
+// ✅ IMPORTANT: add notification api
+import { notificationApi } from "../api/notificationApi";
+
 const store = configureStore({
   reducer: {
     user: userReducer,
@@ -30,10 +33,12 @@ const store = configureStore({
     broker: brokerReducer,
     asset: assetReducer,
     investment: investmentReducer,
-    
+
     customerPay: customerPayReducer,
     brokerPay: brokerPayReducer,
+
     [dashboardApi.reducerPath]: dashboardApi.reducer,
+
     [userApi.reducerPath]: userApi.reducer,
     [customerApi.reducerPath]: customerApi.reducer,
     [brokerApi.reducerPath]: brokerApi.reducer,
@@ -45,6 +50,9 @@ const store = configureStore({
 
     [customerPayHistoryApi.reducerPath]: customerPayHistoryApi.reducer,
     [brokerPayHistoryApi.reducerPath]: brokerPayHistoryApi.reducer,
+
+    // ✅ ADD THIS
+    [notificationApi.reducerPath]: notificationApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
@@ -55,14 +63,17 @@ const store = configureStore({
       assetApi.middleware,
       investmentApi.middleware,
       dashboardApi.middleware,
+
       customerPayApi.middleware,
       brokerPayApi.middleware,
 
       customerPayHistoryApi.middleware,
-      brokerPayHistoryApi.middleware
+      brokerPayHistoryApi.middleware,
+
+      // ✅ ADD THIS
+      notificationApi.middleware
     ),
 });
 
 setupListeners(store.dispatch);
-
 export default store;
