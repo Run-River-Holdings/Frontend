@@ -24,7 +24,7 @@ import { investmentApi } from "../api/investmentApi";
 import { customerPayApi } from "../api/customerpayApi";
 import { brokerPayApi } from "../api/brokerpayApi";
 import { dashboardApi } from "../api/dashboardApi";
-import { notificationApi } from "../api/Notificationapi";
+import { notificationApi } from "./notificationApi";
 
 const store = configureStore({
   reducer: {
