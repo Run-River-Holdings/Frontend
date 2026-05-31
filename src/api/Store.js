@@ -1,5 +1,3 @@
-// src/store/store.js  (MODIFIED - added notificationApi)
-
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 
@@ -12,19 +10,20 @@ import investmentReducer from "./features/investmentSlice";
 import customerPayReducer from "./features/customerpaySlice";
 import brokerPayReducer from "./features/brokerpaySlice";
 
-import { customerPayHistoryApi } from "../api/customerPayHistoryApi";
-import { brokerPayHistoryApi } from "../api/brokerPayHistoryApi";
+import { userApi } from "./userApi";
+import { customerApi } from "./customerApi";
+import { brokerApi } from "./brokerApi";
+import { assetApi } from "./assetApi";
+import { investmentApi } from "./investmentApi";
 
-import { userApi } from "../api/userApi";
-import { customerApi } from "../api/customerApi";
-import { brokerApi } from "../api/brokerApi";
-import { assetApi } from "../api/assetApi";
-import { investmentApi } from "../api/investmentApi";
+import { customerPayApi } from "./customerpayApi";
+import { brokerPayApi } from "./brokerpayApi";
 
-import { customerPayApi } from "../api/customerpayApi";
-import { brokerPayApi } from "../api/brokerpayApi";
-import { dashboardApi } from "../api/dashboardApi";
-import { notificationApi } from "./notificationApi";
+import { customerPayHistoryApi } from "./customerPayHistoryApi";
+import { brokerPayHistoryApi } from "./brokerPayHistoryApi";
+
+import { dashboardApi } from "./dashboardApi";
+import { notificationApi } from "./notificationApi.js";
 
 const store = configureStore({
   reducer: {
@@ -37,7 +36,6 @@ const store = configureStore({
     customerPay: customerPayReducer,
     brokerPay: brokerPayReducer,
 
-    [dashboardApi.reducerPath]: dashboardApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [customerApi.reducerPath]: customerApi.reducer,
     [brokerApi.reducerPath]: brokerApi.reducer,
@@ -50,7 +48,8 @@ const store = configureStore({
     [customerPayHistoryApi.reducerPath]: customerPayHistoryApi.reducer,
     [brokerPayHistoryApi.reducerPath]: brokerPayHistoryApi.reducer,
 
-    [notificationApi.reducerPath]: notificationApi.reducer, // ✅ NEW
+    [dashboardApi.reducerPath]: dashboardApi.reducer,
+    [notificationApi.reducerPath]: notificationApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
@@ -60,12 +59,15 @@ const store = configureStore({
       brokerApi.middleware,
       assetApi.middleware,
       investmentApi.middleware,
-      dashboardApi.middleware,
+
       customerPayApi.middleware,
       brokerPayApi.middleware,
+
       customerPayHistoryApi.middleware,
       brokerPayHistoryApi.middleware,
-      notificationApi.middleware, // ✅ NEW
+
+      dashboardApi.middleware,
+      notificationApi.middleware
     ),
 });
 

@@ -1,5 +1,3 @@
-// src/api/notificationApi.js
-
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -12,7 +10,11 @@ export const notificationApi = createApi({
     credentials: "include",
     prepareHeaders: (headers, { getState }) => {
       const token = getState()?.user?.token;
-      if (token) headers.set("Authorization", `Bearer ${token}`);
+
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+
       return headers;
     },
   }),

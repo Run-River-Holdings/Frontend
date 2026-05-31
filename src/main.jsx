@@ -6,7 +6,6 @@ import "./index.css";
 
 import store from "./api/Store.js";
 
-// pages/layouts...
 import SignUpPage from "./pages/SignUp.page.jsx";
 import SignInPage from "./pages/SignIn.page.jsx";
 import EmailVerificationPage from "./pages/EmailVerfication.jsx";
@@ -40,7 +39,6 @@ import ViewInvestementpage from "./pages/View.investement.page.jsx";
 import AssetPage from "./pages/Asset.page.jsx";
 import ViewAssetpage from "./pages/view.assets.page.jsx";
 
-// ✅ NEW
 import ProtectedRoute from "./compoments/ProtectedRoute.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -49,13 +47,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <BrowserRouter>
         <Routes>
           <Route element={<RootLayout />}>
-            {/* PUBLIC ROUTES */}
             <Route path="/" element={<SignUpPage />} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/vertify" element={<EmailVerificationPage />} />
 
-            {/* Notification (protect if you want) */}
             <Route
               path="/notification"
               element={
@@ -65,7 +61,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               }
             />
 
-            {/* ✅ PROTECTED: SecondLayout */}
             <Route
               element={
                 <ProtectedRoute>
@@ -77,7 +72,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="/user" element={<UserPage />} />
             </Route>
 
-            {/* ✅ PROTECTED: CUSTOMER */}
             <Route
               path="/customers"
               element={
@@ -90,7 +84,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="viewcustomers" element={<ViewCustomerPage />} />
             </Route>
 
-            {/* ✅ PROTECTED: PAYMENT */}
             <Route
               path="/payment"
               element={
@@ -106,7 +99,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="broker/history" element={<BrokerPaymantHistory />} />
             </Route>
 
-            {/* ✅ PROTECTED: BROKER */}
             <Route
               path="/broker"
               element={
@@ -119,7 +111,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="viewbrokers" element={<ViewBrokersPage />} />
             </Route>
 
-            {/* ✅ PROTECTED: INVESTMENT */}
             <Route
               path="/investment"
               element={
@@ -132,7 +123,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="viewinvestment" element={<ViewInvestementpage />} />
             </Route>
 
-            {/* ✅ PROTECTED: ASSETS */}
             <Route
               path="/assets"
               element={
