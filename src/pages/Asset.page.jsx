@@ -50,11 +50,39 @@ const getPersonFromRef = (ref, list) => {
   return list.find((item) => String(item?._id) === String(ref)) || null;
 };
 
+const getPersonName = (person) => {
+  return (
+    person?.name ||
+    person?.fullName ||
+    person?.customerName ||
+    person?.brokerName ||
+    "-"
+  );
+};
+
+const getPersonNic = (person) => {
+  return (
+    person?.nic ||
+    person?.NIC ||
+    person?.customerNic ||
+    person?.brokerNic ||
+    "-"
+  );
+};
+
+const getPersonSearchText = (person) => {
+  return cleanText(
+    `${getPersonNic(person)} ${getPersonName(person)} ${person?.phone || ""} ${
+      person?.phonenumber || ""
+    } ${person?.mobile || ""}`
+  );
+};
+
 /* ---------- Modal UI ---------- */
 
 const ModalShell = ({ title, children, onClose }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3">
-    <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl overflow-hidden">
+    <div className="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-xl">
       <div className="flex items-center justify-between border-b px-5 py-3">
         <h3 className="text-base font-extrabold text-blue-800">{title}</h3>
 
@@ -66,56 +94,141 @@ const ModalShell = ({ title, children, onClose }) => (
         </button>
       </div>
 
-      <div className="p-4 max-h-[70vh] overflow-auto">{children}</div>
+      <div className="max-h-[70vh] overflow-auto p-4">{children}</div>
     </div>
   </div>
 );
 
-/* ---------- Dropdown Select ---------- */
+/* ---------- Searchable Customer / Broker Select ---------- */
 
 const PersonSelect = ({
   label,
   valueId,
   onChangeId,
   list,
-  placeholder = "Select...",
+  placeholder = "Type NIC or Name",
 }) => {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+
   const selectedObj = useMemo(() => {
     if (!valueId) return null;
 
-    return list.find((item) => item?._id === valueId) || null;
+    return (
+      list.find((item) => String(item?._id) === String(valueId)) || null
+    );
   }, [valueId, list]);
+
+  useEffect(() => {
+    if (selectedObj) {
+      setQuery(`${getPersonNic(selectedObj)} - ${getPersonName(selectedObj)}`);
+    } else if (!valueId) {
+      setQuery("");
+    }
+  }, [selectedObj, valueId]);
+
+  const filteredList = useMemo(() => {
+    const search = cleanText(query);
+
+    if (!search) return list.slice(0, 20);
+
+    return list
+      .filter((item) => getPersonSearchText(item).includes(search))
+      .slice(0, 20);
+  }, [query, list]);
+
+  const selectPerson = (person) => {
+    onChangeId(person?._id || "");
+    setQuery(`${getPersonNic(person)} - ${getPersonName(person)}`);
+    setOpen(false);
+  };
+
+  const clearPerson = () => {
+    onChangeId("");
+    setQuery("");
+    setOpen(false);
+  };
+
+  const handleInputChange = (e) => {
+    setQuery(e.target.value);
+    onChangeId("");
+    setOpen(true);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && filteredList.length > 0) {
+      e.preventDefault();
+      selectPerson(filteredList[0]);
+    }
+
+    if (e.key === "Escape") {
+      setOpen(false);
+    }
+  };
 
   return (
     <div className="rounded-xl border border-gray-200 p-3">
       <label className="text-sm text-gray-800">{label}</label>
 
-      <select
-        value={valueId || ""}
-        onChange={(e) => onChangeId(e.target.value || "")}
-        className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"
-      >
-        <option value="">{placeholder}</option>
+      <div className="relative mt-2">
+        <input
+          type="text"
+          value={query}
+          onChange={handleInputChange}
+          onFocus={() => setOpen(true)}
+          onBlur={() => {
+            setTimeout(() => setOpen(false), 150);
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+        />
 
-        {list.map((item) => (
-          <option key={item._id} value={item._id}>
-            {(item?.nic || "-")} - {(item?.name || "-")}
-          </option>
-        ))}
-      </select>
+        {open && (
+          <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+            {filteredList.length === 0 ? (
+              <div className="px-3 py-3 text-sm text-gray-500">
+                No matching {label.toLowerCase()} found
+              </div>
+            ) : (
+              filteredList.map((item) => (
+                <button
+                  key={item._id}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => selectPerson(item)}
+                  className="w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-blue-50"
+                >
+                  <div className="font-semibold text-gray-900">
+                    {getPersonName(item)}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    NIC: {getPersonNic(item)}
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      <p className="mt-2 text-[11px] text-gray-500">
+        Type NIC or name, then click the correct {label.toLowerCase()}. You can
+        also press Enter to select the first result.
+      </p>
 
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div className="rounded-xl bg-gray-50 p-3">
           <div className="text-[11px] text-gray-500">Selected Name</div>
           <div className="break-words text-sm text-gray-900">
-            {selectedObj?.name || "-"}
+            {selectedObj ? getPersonName(selectedObj) : "-"}
           </div>
         </div>
 
         <div className="rounded-xl bg-gray-50 p-3">
           <div className="text-[11px] text-gray-500">Selected NIC</div>
           <div className="break-words text-sm text-gray-900">
-            {selectedObj?.nic || "-"}
+            {selectedObj ? getPersonNic(selectedObj) : "-"}
           </div>
         </div>
       </div>
@@ -123,7 +236,7 @@ const PersonSelect = ({
       {valueId && (
         <button
           type="button"
-          onClick={() => onChangeId("")}
+          onClick={clearPerson}
           className="mt-3 w-full rounded-xl bg-gray-200 px-4 py-2 text-sm text-gray-800 hover:bg-gray-300"
         >
           Clear
@@ -227,7 +340,7 @@ const AssetForm = ({ initial, customers, brokers, onSubmit, isLoading }) => {
         valueId={customerId}
         onChangeId={setCustomerId}
         list={customers ?? []}
-        placeholder="Select Customer NIC - Name"
+        placeholder="Type Customer NIC or Name"
       />
 
       <PersonSelect
@@ -235,7 +348,7 @@ const AssetForm = ({ initial, customers, brokers, onSubmit, isLoading }) => {
         valueId={brokerId}
         onChangeId={setBrokerId}
         list={brokers ?? []}
-        placeholder="Select Broker NIC - Name"
+        placeholder="Type Broker NIC or Name"
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -413,11 +526,11 @@ const AssetPage = () => {
       const assetName = cleanText(asset?.assetName);
       const assetType = cleanText(asset?.assetType);
 
-      const customerName = cleanText(customer?.name);
-      const customerNic = cleanText(customer?.nic);
+      const customerName = cleanText(getPersonName(customer));
+      const customerNic = cleanText(getPersonNic(customer));
 
-      const brokerName = cleanText(broker?.name);
-      const brokerNic = cleanText(broker?.nic);
+      const brokerName = cleanText(getPersonName(broker));
+      const brokerNic = cleanText(getPersonNic(broker));
 
       const matchFromDate = !fromDate || assetDate >= fromDate;
       const matchToDate = !toDate || assetDate <= toDate;
@@ -544,13 +657,12 @@ const AssetPage = () => {
   };
 
   return (
-    <div className="w-full flex justify-center">
+    <div className="flex w-full justify-center">
       <div className="w-full max-w-7xl min-w-0 px-3 py-4 sm:px-6 sm:py-6">
         <h1 className="text-center text-2xl font-extrabold text-blue-800 sm:text-3xl">
           Assets
         </h1>
 
-        {/* FILTER BOXES */}
         <form
           onSubmit={handleSearch}
           className="mt-5 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-7"
@@ -712,7 +824,10 @@ const AssetPage = () => {
                 </tr>
               ) : (
                 assets.map((asset) => {
-                  const customer = getPersonFromRef(asset?.customerId, customers);
+                  const customer = getPersonFromRef(
+                    asset?.customerId,
+                    customers
+                  );
                   const broker = getPersonFromRef(asset?.brokerId, brokers);
 
                   return (
@@ -732,10 +847,10 @@ const AssetPage = () => {
                           Customer:
                         </span>
                         <div className="break-words text-gray-900">
-                          {customer?.name || "-"}
+                          {customer ? getPersonName(customer) : "-"}
                         </div>
                         <div className="break-words text-[11px] text-gray-500">
-                          {customer?.nic || "-"}
+                          {customer ? getPersonNic(customer) : "-"}
                         </div>
                       </td>
 
@@ -744,10 +859,10 @@ const AssetPage = () => {
                           Broker:
                         </span>
                         <div className="break-words text-gray-900">
-                          {broker?.name || "-"}
+                          {broker ? getPersonName(broker) : "-"}
                         </div>
                         <div className="break-words text-[11px] text-gray-500">
-                          {broker?.nic || "-"}
+                          {broker ? getPersonNic(broker) : "-"}
                         </div>
                       </td>
 
@@ -816,7 +931,6 @@ const AssetPage = () => {
         </div>
       </div>
 
-      {/* ADD */}
       {modal === "add" && (
         <ModalShell title="Add Asset" onClose={close}>
           <AssetForm
@@ -829,7 +943,6 @@ const AssetPage = () => {
         </ModalShell>
       )}
 
-      {/* VIEW */}
       {modal === "view" && selected && (
         <ModalShell title="Asset Details" onClose={close}>
           {(() => {
@@ -848,16 +961,20 @@ const AssetPage = () => {
                 <div className="flex justify-between gap-4">
                   <span className="text-gray-500">Customer</span>
                   <span className="text-right">
-                    {customer?.name || "-"}{" "}
-                    {customer?.nic ? `(${customer.nic})` : ""}
+                    {customer ? getPersonName(customer) : "-"}{" "}
+                    {customer && getPersonNic(customer) !== "-"
+                      ? `(${getPersonNic(customer)})`
+                      : ""}
                   </span>
                 </div>
 
                 <div className="flex justify-between gap-4">
                   <span className="text-gray-500">Broker</span>
                   <span className="text-right">
-                    {broker?.name || "-"}{" "}
-                    {broker?.nic ? `(${broker.nic})` : ""}
+                    {broker ? getPersonName(broker) : "-"}{" "}
+                    {broker && getPersonNic(broker) !== "-"
+                      ? `(${getPersonNic(broker)})`
+                      : ""}
                   </span>
                 </div>
 
@@ -926,7 +1043,6 @@ const AssetPage = () => {
         </ModalShell>
       )}
 
-      {/* EDIT */}
       {modal === "edit" && selected && (
         <ModalShell title="Update Asset" onClose={close}>
           <AssetForm
@@ -939,7 +1055,6 @@ const AssetPage = () => {
         </ModalShell>
       )}
 
-      {/* DELETE */}
       {modal === "delete" && selected && (
         <ModalShell title="Delete Asset" onClose={close}>
           <p className="text-sm text-gray-700">
